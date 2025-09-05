@@ -1,0 +1,250 @@
+<style>
+  /* Match author-hero design system */
+  .pj-wrap{
+    --bg:#0b0c10; --text:#e8ecf1; --muted:#b7c0cd; --brand:#9ad4ff; --brand2:#ffb3ab;
+    background:var(--bg); color:var(--text); padding:56px 0;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .pj-wrap h2{
+    color:var(--brand);
+    text-align:center;
+    margin:0 0 20px;
+    font-size:clamp(3rem,6vw,4.5rem);
+    font-weight:500;
+    letter-spacing:.02em;
+  }
+  .pj-sub{
+    color:#fff; text-align:center; margin:0 0 30px; max-width:80ch; margin-inline:auto;
+    line-height:1.6; font-size:20px; font-weight:300;
+  }
+
+  /* Grid */
+  .pj-tiles{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;width:min(1200px,92%);margin:0 auto}
+  .span-6{grid-column:span 6}
+  .span-12{grid-column:span 12}
+  @media (max-width:980px){.span-6,.span-12{grid-column:span 12}}
+
+  /* Tiles */
+  .pj-tile{
+    position:relative;border-radius:14px;overflow:hidden;background:#0a0a0a;
+    border:1px solid rgba(255,255,255,.12); box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+
+  /* ======== FIXED-ASPECT MODE (equal size & spacing) =========
+     Change the aspect-ratio below to control the card shape for the first 4 photos.
+     Common options: 4/3 (landscape), 1/1 (square), 3/4 (portrait).
+  */
+  .pj-frame{ width:100%; aspect-ratio: 4 / 3; } /* ← ASPECT RATIO CONTROL */
+  .pj-frame img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;       /* fill the frame; crops edges uniformly */
+    transition:filter .25s ease, transform .25s ease;
+  }
+  /* Per-image focal tweaks to avoid important crops */
+  .focus-top{ object-position:50% 12%; }
+  .focus-right{ object-position:68% 50%; }
+  .focus-top-tight{ object-position:50% 0%; }
+  .pj-tile:hover .pj-frame img{ transform:scale(1.02) } /* tiny polish */
+
+  /* Optional: hero uses a wider cinematic ratio */
+  .pj-frame.hero{ aspect-ratio: 16 / 9; }
+
+  /* Caption (hover on desktop, always visible on touch) */
+  .pj-caption{
+    position:absolute; left:0; right:0; bottom:0; padding:10px 12px;
+    background:linear-gradient(180deg,transparent 0%, rgba(0,0,0,.78) 70%);
+    color:#fff; font-weight:700; opacity:0; transition:opacity .25s ease;
+    border-bottom-left-radius:14px; border-bottom-right-radius:14px;
+  }
+  .pj-tile:hover .pj-caption, .pj-tile:focus-within .pj-caption{ opacity:1 }
+  @media (hover:none){ .pj-caption{ opacity:1 } }
+
+  /* Full-tile click target for lightbox */
+  .pj-open{position:absolute;inset:0;border:0;background:transparent;cursor:zoom-in;z-index:2}
+
+  /* Reveal animation */
+  .pj-reveal{ opacity:0; transform:translateY(14px); will-change:opacity, transform; }
+  .pj-reveal.inview{ opacity:1; transform:none; transition:opacity .5s ease, transform .5s ease; }
+  @media (prefers-reduced-motion:reduce){ .pj-reveal,.pj-reveal.inview{ opacity:1; transform:none; transition:none } }
+
+  /* Lightbox */
+  .pj-lightbox[hidden]{display:none}
+  .pj-lightbox{position:fixed;inset:0;z-index:9999}
+  .pj-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.85)}
+  .pj-dialog{position:relative;width:min(1200px,96%);max-height:92vh;margin:4vh auto;background:#000;
+    border:1px solid rgba(255,255,255,.12);border-radius:14px;display:flex;flex-direction:column}
+  .pj-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+    background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.12);color:#fff;font-weight:700}
+  .pj-close{border:1px solid rgba(255,255,255,.12);background:#111;color:#fff;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
+  .pj-nav{display:flex;gap:8px}
+  .pj-nav button{border:1px solid rgba(255,255,255,.12);background:#111;color:#fff;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
+  .pj-full{display:block;width:100%;height:auto}
+  .pj-cap{color:#fff;font-weight:700;padding:10px 12px}
+</style>
+
+<section class="pj-wrap" aria-labelledby="photos-heading">
+  <h2 id="photos-heading">Photo Journal</h2>
+  <p class="pj-sub">
+    Backstage sofas, <em>photocopied</em> flyers, <em>motorway</em> naps — snapshots from the early-2000s London music scene that inspired <em>Climbing up the Walls</em>.
+  </p>
+
+  <div class="pj-tiles" role="list">
+    <!-- Row 1 (equal halves) -->
+    <figure class="pj-tile span-6 pj-reveal" role="listitem" tabindex="0">
+      <div class="pj-frame">
+        <img src="{{ 'IMG_3947.jpg' | file_url }}" alt="Leybourne Rd, London storefront" loading="lazy" decoding="async">
+      </div>
+      <figcaption class="pj-caption">Leybourne Rd, London</figcaption>
+      <button class="pj-open" type="button"
+        data-src="{{ 'IMG_3947.jpg' | file_url }}"
+        data-alt="Leybourne Rd, London storefront"
+        data-cap="Leybourne Rd, London"></button>
+    </figure>
+
+    <figure class="pj-tile span-6 pj-reveal" role="listitem" tabindex="0">
+      <div class="pj-frame">
+        <img src="{{ '429f453c-661c-4f87-a23f-163072b66b2d.jpg' | file_url }}" alt="Rehearsal room performance" loading="lazy" decoding="async">
+      </div>
+      <figcaption class="pj-caption">Rehearsal room</figcaption>
+      <button class="pj-open" type="button"
+        data-src="{{ '429f453c-661c-4f87-a23f-163072b66b2d.jpg' | file_url }}"
+        data-alt="Rehearsal room performance"
+        data-cap="Rehearsal room"></button>
+    </figure>
+
+    <!-- Row 2 (equal halves) -->
+    <figure class="pj-tile span-6 pj-reveal" role="listitem" tabindex="0">
+      <div class="pj-frame">
+        <img class="focus-top-tight" src="{{ '74388c6d-cb8d-4874-bd37-91eb24bc7c3e.jpg' | file_url }}" alt="Gig flyer — Camden Town" loading="lazy" decoding="async">
+      </div>
+      <figcaption class="pj-caption">Gig flyer — Camden Town</figcaption>
+      <button class="pj-open" type="button"
+        data-src="{{ '74388c6d-cb8d-4874-bd37-91eb24bc7c3e.jpg' | file_url }}"
+        data-alt="Gig flyer — Camden Town"
+        data-cap="Gig flyer — Camden Town"></button>
+    </figure>
+
+    <figure class="pj-tile span-6 pj-reveal" role="listitem" tabindex="0">
+      <div class="pj-frame">
+        <img class="focus-top" src="{{ 'IMG_3945.jpg' | file_url }}" alt="On the road in the van" loading="lazy" decoding="async">
+      </div>
+      <figcaption class="pj-caption">On the road</figcaption>
+      <button class="pj-open" type="button"
+        data-src="{{ 'IMG_3945.jpg' | file_url }}"
+        data-alt="On the road in the van"
+        data-cap="On the road"></button>
+    </figure>
+
+    <!-- Row 3 (Full-width hero, cinematic) -->
+    <figure class="pj-tile span-12 pj-reveal" role="listitem" tabindex="0">
+      <div class="pj-frame hero">
+        <img src="{{ '63eb2621-d531-4dde-8e5f-68a861f6ad03.jpg' | file_url }}" alt="Band relaxing backstage" loading="lazy" decoding="async">
+      </div>
+      <figcaption class="pj-caption">Backstage — the band</figcaption>
+      <button class="pj-open" type="button"
+        data-src="{{ '63eb2621-d531-4dde-8e5f-68a861f6ad03.jpg' | file_url }}"
+        data-alt="Band relaxing backstage"
+        data-cap="Backstage — the band"></button>
+    </figure>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="pj-lightbox" hidden aria-hidden="true">
+    <div class="pj-backdrop" data-pj-close></div>
+    <div class="pj-dialog" role="dialog" aria-modal="true" aria-label="Image preview">
+      <div class="pj-bar">
+        <span class="pj-bar-cap">Photo</span>
+        <div class="pj-nav">
+          <button class="pj-prev" type="button" aria-label="Previous image">←</button>
+          <button class="pj-next" type="button" aria-label="Next image">→</button>
+        </div>
+        <button class="pj-close" type="button" data-pj-close>Close</button>
+      </div>
+      <img class="pj-full" alt="">
+      <div class="pj-cap"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    const wrap = document.querySelector('.pj-wrap');
+    if(!wrap) return;
+
+    // Lazy/async safety
+    wrap.querySelectorAll('img').forEach(img=>{
+      if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+      if(!img.hasAttribute('decoding')) img.setAttribute('decoding','async');
+    });
+
+    // Reveal on scroll
+    const reveals = wrap.querySelectorAll('.pj-reveal');
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){ e.target.classList.add('inview'); io.unobserve(e.target); }
+      });
+    }, { rootMargin:'0px 0px -10% 0px', threshold:0.1 });
+    reveals.forEach(el=>io.observe(el));
+
+    // Lightbox + keyboard nav
+    const overlay = wrap.querySelector('.pj-lightbox');
+    const full = wrap.querySelector('.pj-full');
+    const cap = wrap.querySelector('.pj-cap');
+    const barCap = wrap.querySelector('.pj-bar-cap');
+    const btnPrev = wrap.querySelector('.pj-prev');
+    const btnNext = wrap.querySelector('.pj-next');
+    const btnCloseEls = wrap.querySelectorAll('[data-pj-close]');
+    const openers = Array.from(wrap.querySelectorAll('.pj-open'));
+
+    let idx = -1;
+
+    function openAt(i){
+      idx = (i + openers.length) % openers.length;
+      const btn = openers[idx];
+      const src = btn.getAttribute('data-src');
+      const alt = btn.getAttribute('data-alt') || 'Photo';
+      const caption = btn.getAttribute('data-cap') || alt;
+      full.src = src; full.alt = alt;
+      cap.textContent = caption; barCap.textContent = caption;
+      overlay.hidden = false; overlay.setAttribute('aria-hidden','false');
+      document.documentElement.style.overflow = 'hidden';
+      btnCloseEls[btnCloseEls.length-1]?.focus();
+    }
+
+    function closeLB(){
+      overlay.hidden = true; overlay.setAttribute('aria-hidden','true');
+      document.documentElement.style.overflow = '';
+      full.removeAttribute('src'); full.removeAttribute('alt');
+      cap.textContent = ''; barCap.textContent = 'Photo';
+    }
+
+    openers.forEach((btn, i)=>{
+      const tile = btn.closest('.pj-tile');
+      tile.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault(); openAt(i);
+        }
+      });
+      btn.addEventListener('click', ()=> openAt(i) );
+      tile.setAttribute('tabindex','0');
+    });
+
+    btnPrev.addEventListener('click', ()=> openAt(idx-1) );
+    btnNext.addEventListener('click', ()=> openAt(idx+1) );
+    btnCloseEls.forEach(el=> el.addEventListener('click', closeLB) );
+    wrap.querySelector('.pj-backdrop').addEventListener('click', closeLB);
+
+    document.addEventListener('keydown', (e)=>{
+      if(overlay.hidden) return;
+      if(e.key === 'Escape') closeLB();
+      if(e.key === 'ArrowLeft') openAt(idx-1);
+      if(e.key === 'ArrowRight') openAt(idx+1);
+    });
+  })();
+</script>
+
+
+
+
