@@ -70,9 +70,11 @@
     .price{font-size:1.2rem;font-weight:800}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:color-mix(in oklab,var(--brand) 20%, transparent);color:var(--brand);font-weight:700;font-size:.8rem}
 
-    .excerpt{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;align-items:center}
+    .excerpt{display:grid;grid-template-columns:repeat(2,minmax(0,560px));grid-template-areas:"intro intro" "quote love";justify-content:end;column-gap:72px;row-gap:32px;align-items:start;padding:90px 0}
     .excerpt p{color:var(--muted)}
-    .pullquote{background:linear-gradient(135deg,color-mix(in oklab,var(--brand) 16%, transparent),color-mix(in oklab,var(--brand-2) 14%, transparent));border:1px solid var(--ring);padding:18px;border-radius:var(--radius);font-style:italic}
+    .excerpt .intro{grid-area:intro;text-align:center;max-width:70ch;margin:0 auto 16px}
+    .excerpt .love{grid-area:love;justify-self:start;align-self:center;max-width:520px;text-align:left}
+    .pullquote{grid-area:quote;justify-self:start;align-self:center;max-width:520px;background:linear-gradient(135deg,color-mix(in oklab,var(--brand) 16%, transparent),color-mix(in oklab,var(--brand-2) 14%, transparent));border:1px solid var(--ring);padding:18px;border-radius:var(--radius);font-style:italic}
 
     .reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
     .review{background:var(--panel);border:1px solid color-mix(in oklab, var(--ring) 60%, transparent);padding:16px;border-radius:var(--radius)}
@@ -118,7 +120,7 @@
 
     @media (max-width:980px){
       .hero{grid-template-columns:1fr}
-      .excerpt{grid-template-columns:1fr}
+      .excerpt{grid-template-columns:1fr;grid-template-areas:"intro" "quote" "love";justify-content:stretch;padding:70px 0}
       .reviews{grid-template-columns:1fr}
       .cards{grid-template-columns:1fr}
       .author{grid-template-columns:1fr}
@@ -190,12 +192,12 @@
     </section>
 
     <section class="container section excerpt" aria-labelledby="inside">
-      <div>
+      <div class="intro">
         <h2 id="inside">Inside the Book</h2>
         <p>In <em>Climbing up the Walls</em>, a music journalist navigates the scene’s raucous energy and underground culture, confronting the choices that shape who we become — and what we leave behind.</p>
-        <div class="pullquote">“A luminous debut that lingers like a half-remembered song.” — Early reviewer</div>
       </div>
-      <div>
+      <div class="pullquote">“A luminous debut that lingers like a half-remembered song.” — Early reviewer</div>
+      <div class="love">
         <h3>What you'll love</h3>
         <ul>
           <li>Character‑driven storytelling with a strong sense of place</li>

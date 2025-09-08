@@ -1,0 +1,153 @@
+<style>
+  :root{ --brand:#9ad4ff; --brand-2:#ffb3ab }
+  #sendBtn{ transition:transform .15s ease, filter .15s ease }
+  #sendBtn:hover{ filter:brightness(1.06); transform:translateY(-1px) }
+</style>
+<form id="about-contact-form"
+      action="https://formsubmit.co/camillepandianmilner@gmail.com"
+      method="POST"
+      style="
+        /* centered card */
+        width:min(720px,100%);
+        margin:20px auto 40px;
+        padding:26px 24px;
+        background:#0f1116;
+        border:2px solid #ffffff;
+        border-radius:20px;
+        box-shadow:0 10px 32px rgba(0,0,0,.35);
+
+        /* tidy layout */
+        display:grid;
+        grid-template-columns:1fr;
+        gap:16px;
+      ">
+
+  <!-- FormSubmit config -->
+  <input type="hidden" name="_captcha" value="false">
+  <input type="hidden" name="_template" value="table">
+  <!-- we’ll set _subject from the Subject field via JS -->
+  <input type="text" name="_honey" style="display:none">
+
+  <!-- Header (inside the card) -->
+  <div style="text-align:center; margin-bottom:8px;">
+    <h2 style="margin:0; font-size:clamp(1.6rem,3.8vw,2.2rem); line-height:1.2; color:#ffffff; font-weight:800; text-shadow:0 2px 12px rgba(0,0,0,.45);">
+      Contact the author for events and speaking engagements
+    </h2>
+    <div style="height:12px"></div>
+    <div style="width:120px; height:4px; border-radius:999px; margin:0 auto;
+                background:linear-gradient(135deg, var(--brand, #9ad4ff), var(--brand-2, #ffb3ab));"></div>
+  </div>
+
+  <!-- Name -->
+  <label for="about-name" style="color:#ffffff; font-size:1.2rem; font-weight:800;">Name</label>
+  <input id="about-name" name="name" type="text" placeholder="Your name" required
+         style="
+           width:100%; padding:18px 16px; border-radius:14px;
+           background:#ffffff; color:#0b0c10;
+           border:2px solid #ffffff; font-size:1.15rem; line-height:1.5;
+           box-shadow:0 6px 22px rgba(0,0,0,.22);
+         ">
+
+  <!-- Email -->
+  <label for="about-email" style="color:#ffffff; font-size:1.2rem; font-weight:800;">Email</label>
+  <input id="about-email" name="email" type="email" placeholder="you@example.com" required
+         style="
+           width:100%; padding:18px 16px; border-radius:14px;
+           background:#ffffff; color:#0b0c10;
+           border:2px solid #ffffff; font-size:1.15rem; line-height:1.5;
+           box-shadow:0 6px 22px rgba(0,0,0,.22);
+         ">
+
+  <!-- Subject -->
+  <label for="about-subject" style="color:#ffffff; font-size:1.2rem; font-weight:800;">Subject</label>
+  <input id="about-subject" name="subject" type="text" placeholder="What’s this about?" required
+         style="
+           width:100%; padding:18px 16px; border-radius:14px;
+           background:#ffffff; color:#0b0c10;
+           border:2px solid #ffffff; font-size:1.15rem; line-height:1.5;
+           box-shadow:0 6px 22px rgba(0,0,0,.22);
+         ">
+
+  <!-- Description -->
+  <label for="about-message" style="color:#ffffff; font-size:1.2rem; font-weight:800;">Description</label>
+  <textarea id="about-message" name="message" placeholder="Share details, links, dates, and anything helpful…" required
+            style="
+              width:100%; min-height:240px; padding:18px 16px; border-radius:14px;
+              background:#ffffff; color:#0b0c10;
+              border:2px solid #ffffff; font-size:1.15rem; line-height:1.6;
+              resize:vertical; box-shadow:0 8px 26px rgba(0,0,0,.24);
+            "></textarea>
+
+  <!-- Send button -->
+  <div style="text-align:center; margin-top:6px;">
+    <button id="sendBtn" type="submit" class="btn"
+            style="
+              padding:16px 28px; font-size:1.15rem; font-weight:900;
+              border:0; border-radius:12px;
+              background:linear-gradient(135deg, var(--brand, #9ad4ff), var(--brand-2, #ffb3ab));
+              color:#0b0c10; box-shadow:0 10px 30px rgba(0,0,0,.25); cursor:pointer;
+            ">
+      Send message
+    </button>
+  </div>
+
+  <!-- Inline status message -->
+  <p id="about-status" role="status" aria-live="polite"
+     style="text-align:center; color:#ffffff; font-size:1.05rem; margin-top:6px;"></p>
+</form>
+
+<script>
+  // Expert UX: AJAX submit + use Subject field as email subject
+  (function(){
+    const form = document.getElementById('about-contact-form');
+    if(!form) return;
+    const statusEl = document.getElementById('about-status');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // subtle focus ring without touching your global CSS
+    function ring(el, on){
+      if(!el) return;
+      el.style.boxShadow = on
+        ? '0 0 0 3px rgba(59,169,255,.25), 0 6px 18px rgba(0,0,0,.18)'
+        : '0 4px 14px rgba(0,0,0,.12)';
+      el.style.borderColor = on ? 'var(--brand)' : '#e5e7eb';
+    }
+    ['about-name','about-email','about-subject','about-message'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('focus', ()=>ring(el, true));
+      el.addEventListener('blur',  ()=>ring(el, false));
+    });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+      if(statusEl) statusEl.textContent = '';
+
+      try{
+        const fd = new FormData(form);
+        const subj = (fd.get('subject') || 'Website Contact').toString();
+        fd.set('_subject', subj);
+
+        const res = await fetch('https://formsubmit.co/ajax/camillepandianmilner@gmail.com', {
+          method: 'POST',
+          headers: { 'Accept':'application/json' },
+          body: fd
+        });
+        if(!res.ok) throw new Error('Request failed');
+        await res.json();
+
+        form.reset();
+        if(statusEl){
+          statusEl.textContent = 'Thanks — your message has been sent.';
+        }
+      }catch(err){
+        if(statusEl){
+          statusEl.textContent = 'Sorry, there was an error. Please email camillepandianmilner@gmail.com.';
+        }
+      }finally{
+        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Send message'; }
+      }
+    });
+  })();
+</script>
