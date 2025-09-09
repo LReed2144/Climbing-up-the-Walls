@@ -7,8 +7,12 @@
   .nav .logo{box-shadow:0 10px 30px rgba(0,0,0,.4)}
   /* Ensure reader anchor accounts for sticky header height */
   #chapter-reader{scroll-margin-top:96px}
+  /* Mobile: hide the view toggle (prevents accidental scrolling/two-page switch) */
+  @media (max-width: 640px){
+    #kr-view{ display:none !important }
+  }
 </style>
-<section id="chapter-reader" style="scroll-margin-top: 96px; margin: 48px 0;">
+<section id="chapter-reader" style="scroll-margin-top: 96px; margin: 0;">
     <div id="kindle-reader-root"
          data-file="{{ 'Climbing_up_the_Walls_Intro_Chapter.pdf' | file_url }}"
          data-title="Climbing up the Walls — Free Chapter"></div>

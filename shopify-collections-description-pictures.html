@@ -66,11 +66,13 @@
 
   /* ===== Excerpt ===== */
   .excerpt{ background:linear-gradient(135deg,rgba(59,169,255,.12),rgba(255,154,166,.10)); border:1px solid var(--ring); border-radius:18px; padding:24px; }
+  #excerpt{ margin-bottom:0 }
   .excerpt h3{ margin:0 0 8px; color:var(--brand) }
   .excerpt p{ color:var(--muted); margin:0 }
 
   /* ===== Photo mosaic (edgy) — REFINED ONLY, rest untouched ===== */
-  .gallery{ padding:52px 0 }
+  .gallery{ padding:0 0 52px }
+  #gallery{ margin-top:-6px }
   .gallery h2{
     font-size:clamp(1.6rem,2.8vw,2.2rem);
     margin:0 0 10px;
@@ -99,8 +101,8 @@
   }
   .tile:hover img, .tile:focus-within img{ transform:scale(1.06) }
 
-  .span-4{ grid-column:span 4 } .span-6{ grid-column:span 6 }
-  .span-8{ grid-column:span 8 } .span-12{ grid-column:span 12 }
+  .span-3{ grid-column:span 3 } .span-4{ grid-column:span 4 } .span-6{ grid-column:span 6 }
+  .span-8{ grid-column:span 8 } .span-9{ grid-column:span 9 } .span-12{ grid-column:span 12 }
 
   .cap{
     position:absolute; left:0; right:0; bottom:0; padding:12px 14px;
@@ -129,7 +131,7 @@
     .cover-card.duo .archer{ width:100%; max-width:none }
     .features{ grid-template-columns:1fr }
     .tiles{ grid-template-columns:repeat(6,minmax(0,1fr)) }
-    .span-4,.span-6,.span-8,.span-12{ grid-column:span 6 }
+    .span-3,.span-4,.span-6,.span-8,.span-9,.span-12{ grid-column:span 6 }
     .buygrid{ grid-template-columns:1fr }
   }
 
@@ -165,6 +167,8 @@
   }
   .buybar .btn{ padding:10px 14px; border-radius:12px; font-weight:800 }
   @media (max-width:980px){ .buybar{ display:flex } }
+  /* Disable the floating buy bar on mobile for this page */
+  @media (max-width:980px){ .buybar{ display:none !important } }
   </style>
 </head>
 <body>
@@ -186,7 +190,7 @@
           </p>
           <div class="cta">
             <!-- TODO: replace href with the real product URL/anchor -->
-            <a class="btn primary" href="/products/climbing-up-the-walls">Buy Paperback Coming Soon</a>
+            <a class="btn primary" href="/products/climbing-up-the-walls">Buy Paperback ->Coming Soon</a>
             <a class="btn" href="#gallery">See the photos</a>
           </div>
 
@@ -241,8 +245,7 @@ their own Dickensian nicknames: Sweets, Tuppence, Lolly, Kitty, Rake, Jasper and
       </p>
     </section>
 
-    <!-- BREAKS after chapter/excerpt before photos -->
-    <br><br>
+    <!-- Removed manual breaks to eliminate extra top gap before gallery -->
 
     <!-- GALLERY (refined only) -->
     <section id="gallery" class="gallery" aria-labelledby="gal-title">
@@ -251,14 +254,14 @@ their own Dickensian nicknames: Sweets, Tuppence, Lolly, Kitty, Rake, Jasper and
 
       <div class="tiles" role="list">
         <!-- 8 + 4 -->
-        <figure class="tile span-8 reveal" role="listitem">
+        <figure class="tile span-9 reveal" role="listitem">
           <a href="{{ 'IMG_3943.jpg' | file_url }}" class="frame ar-169" aria-label="Open image: The arches">
             <img src="{{ 'IMG_3943.jpg' | file_url }}" alt="Graffiti archway with the band scattered along the wall" loading="lazy" decoding="async">
           </a>
           <figcaption class="cap">The arches — everything smelled like rain and feedback</figcaption>
         </figure>
 
-        <figure class="tile span-4 reveal" role="listitem">
+        <figure class="tile span-3 reveal" role="listitem">
           <a href="{{ 'IMG_8524.jpg' | file_url }}" class="frame ar-11" aria-label="Open image: Notes, records, and late-night drafts">
             <img src="{{ 'IMG_8524.jpg' | file_url }}" alt="Vintage books, candle, and turntable" loading="lazy" decoding="async">
           </a>
@@ -317,7 +320,7 @@ their own Dickensian nicknames: Sweets, Tuppence, Lolly, Kitty, Rake, Jasper and
         <div class="cta" style="margin-top:14px">
           <!-- Replace href with your actual product handle -->
           <a class="btn primary" href="/products/climbing-up-the-walls">Coming Soon</a>
-          <a class="btn" href="/pages/contact">Bulk / classroom -> Coming Soon </a>
+          <a class="btn" href="/pages/contact">Bulk / classroom -> Coming Soon</a>
         </div>
         <p class="note" style="margin-top:10px">Signed edition & eBook coming soon.</p>
       </div>
