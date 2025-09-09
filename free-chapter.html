@@ -1,0 +1,302 @@
+<!-- Kindle-like Reader: anchor + non-scrolling pages, auto-fit -->
+<style>
+  /* Page-scoped: make only this page's nav bar solid black */
+  header{position:sticky;top:0;z-index:50;background:#000;border-bottom:1px solid #000}
+  .nav .menu a{color:#cfd6df}
+  .nav .brand span{color:#e8ecf1}
+  .nav .logo{box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  /* Ensure reader anchor accounts for sticky header height */
+  #chapter-reader{scroll-margin-top:96px}
+</style>
+<section id="chapter-reader" style="scroll-margin-top: 96px; margin: 48px 0;">
+    <div id="kindle-reader-root"
+         data-file="{{ 'Climbing_up_the_Walls_Intro_Chapter.pdf' | file_url }}"
+         data-title="Climbing up the Walls — Free Chapter"></div>
+  </section>
+  
+  <script>
+  (function(){
+    var root = document.getElementById("kindle-reader-root");
+    if (!root || root.dataset.init === "1") return;
+    root.dataset.init = "1";
+  
+    // ===== Config =====
+    var FILE_URL     = encodeURI(root.getAttribute("data-file") || "");
+    var BOOK_TITLE   = root.getAttribute("data-title") || "Read a Free Chapter";
+  
+    // Render resolution (keeps crispness when zooming the page image)
+    var RENDER_SCALE = 4.0;
+  
+    // View height controls how large the page appears
+    var VIEWPORT_VH  = 100;   // default BIG for low-vision readers
+    var MIN_VH       = 70;
+    var MAX_VH       = 110;
+    var VH_STEP      = 6;
+  
+    // Spread breakpoint (only used when viewMode === "auto")
+    var AUTO_SPREAD_BREAK = 1600;
+  
+    // Themes
+    var THEMES = {
+      light: { bg:"#F8F7F4", paper:"#FFFFFF", text:"#111" },
+      sepia: { bg:"#F3EAD9", paper:"#FBF3E2", text:"#2a241b" },
+      dark:  { bg:"#0B0C10", paper:"#151821", text:"#e8ecf1" }
+    };
+    var DEFAULT_THEME = "dark"; // ✅ Dark by default
+  
+    // View mode: "single" | "spread" | "auto"
+    var viewMode = "single";    // ✅ Single-page default for readability
+  
+    // ===== CSS (larger UI, dark-friendly, centered pages) =====
+    var css = `
+      #chapter-reader{scroll-margin-top:96px;margin:48px 0;}
+      .kr-wrap{
+        --bg:${THEMES[DEFAULT_THEME].bg};
+        --paper:${THEMES[DEFAULT_THEME].paper};
+        --text:${THEMES[DEFAULT_THEME].text};
+        --ring:rgba(154,212,255,.25);
+      }
+      .kr-root{
+        background:var(--bg); color:var(--text);
+        font:18px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+        border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,.25); overflow:hidden
+      }
+      .kr-toolbar{
+        display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px;
+        border-bottom:1px solid rgba(255,255,255,.12); position:sticky; top:0; z-index:2;
+        background:#000
+      }
+      .kr-title{font-size:16px; font-weight:700; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+      .kr-controls{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+      .kr-btn,.kr-select{
+        appearance:none; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08);
+        padding:8px 12px; border-radius:10px; cursor:pointer; font-size:15px; color:var(--text)
+      }
+      .kr-btn:hover{background:rgba(255,255,255,.14)}
+      .kr-btn[disabled]{opacity:.5; cursor:not-allowed}
+      .kr-progress{appearance:none; width:200px; height:8px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.18)}
+      .kr-progress::-webkit-progress-value{background:#7b9cff}
+      .kr-stage{display:flex; justify-content:center; background:var(--bg)}
+      .kr-sheet{position:relative; width:min(100%, 1200px); margin:12px; display:flex; justify-content:center; align-items:center}
+      .kr-height{height:${VIEWPORT_VH}vh; width:100%; display:flex; gap:16px; justify-content:center; align-items:center}
+      .kr-page{
+        flex:1 1 0; max-width:calc(50% - 8px); background:var(--paper); border-radius:12px;
+        box-shadow:0 18px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset;
+        display:flex; align-items:center; justify-content:center; overflow:hidden
+      }
+      .kr-page.single{max-width:none}
+      .kr-img{max-height:100%; max-width:100%; height:100%; width:auto; display:block; border-radius:6px;
+              image-rendering:auto; opacity:0; transition:opacity .2s ease; object-fit:contain}
+      .kr-zone{position:absolute; top:0; bottom:0; width:25%; cursor:pointer; opacity:0}
+      .kr-zone.left{left:0} .kr-zone.right{right:0}
+      .kr-dimmer-left,.kr-dimmer-right{pointer-events:none; position:absolute; top:0; bottom:0; width:12%; opacity:.20}
+      .kr-dimmer-left{left:0; background:linear-gradient(to right, rgba(0,0,0,.4), transparent)}
+      .kr-dimmer-right{right:0; background:linear-gradient(to left, rgba(0,0,0,.4), transparent)}
+      /* Auto spread applies only if viewMode === "auto" (handled in JS); CSS breakpoint kept for classic behavior fallback */
+      @media (max-width:${AUTO_SPREAD_BREAK-1}px){ .kr-page{max-width:none} .kr-zone{width:33%} }
+      /* Accessibility font */
+      .kr-accessible{font-family:"Atkinson Hyperlegible", system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;}
+    `;
+    var styleEl = document.createElement("style"); styleEl.textContent = css; document.head.appendChild(styleEl);
+  
+    // ===== Build UI =====
+    root.innerHTML = `
+      <div class="kr-wrap">
+        <div class="kr-root" id="kr-root">
+          <div class="kr-toolbar">
+            <div class="kr-title" id="kr-title">${BOOK_TITLE}</div>
+            <div class="kr-controls">
+              <button class="kr-btn" id="kr-prev" aria-label="Previous">‹ Prev</button>
+              <progress id="kr-progress" class="kr-progress" value="0" max="100"></progress>
+              <span id="kr-counter" style="font-variant-numeric:tabular-nums;opacity:.85">0%</span>
+  
+              <button class="kr-btn" id="kr-zoom-out" title="Smaller">A−</button>
+              <button class="kr-btn" id="kr-zoom-in"  title="Larger">A+</button>
+  
+              <button class="kr-btn" id="kr-view" title="Toggle single/two-page">Two-page: Off</button>
+  
+              <select id="kr-theme" class="kr-select" title="Theme">
+                <option value="light">Light</option>
+                <option value="sepia">Sepia</option>
+                <option value="dark">Dark</option>
+              </select>
+  
+              <select id="kr-font" class="kr-select" title="Reading font">
+                <option value="default" selected>Default (System)</option>
+                <option value="accessible">Atkinson Hyperlegible</option>
+              </select>
+  
+              <button class="kr-btn" id="kr-next" aria-label="Next">Next ›</button>
+              <button class="kr-btn" id="kr-full" title="Fullscreen">⤢</button>
+            </div>
+          </div>
+          <div class="kr-stage">
+            <div class="kr-sheet" id="kr-sheet">
+              <div class="kr-height" id="kr-height">
+                <div class="kr-page single" id="kr-left"><img id="kr-img-left" class="kr-img" alt=""></div>
+                <div class="kr-page" id="kr-right"><img id="kr-img-right" class="kr-img" alt=""></div>
+                <div class="kr-zone left"  id="kr-zone-left"></div>
+                <div class="kr-zone right" id="kr-zone-right"></div>
+                <div class="kr-dimmer-left"></div>
+                <div class="kr-dimmer-right"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  
+    // ===== Helpers =====
+    function loadScript(src){return new Promise(function(res,rej){var s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+    function setTheme(name){
+      var t=THEMES[name]||THEMES.dark;
+      var w=document.querySelector(".kr-wrap");
+      w.style.setProperty("--bg",t.bg);
+      w.style.setProperty("--paper",t.paper);
+      w.style.setProperty("--text",t.text);
+    }
+    function matchAutoSpread(){ return window.matchMedia("(min-width:"+AUTO_SPREAD_BREAK+"px)").matches; }
+    function useSpread(){
+      if (viewMode === "spread") return true;
+      if (viewMode === "single") return false;
+      return matchAutoSpread(); // auto
+    }
+    function setViewportVH(vh){
+      vh=Math.max(MIN_VH, Math.min(MAX_VH, vh));
+      document.getElementById("kr-height").style.height = vh + "vh";
+      VIEWPORT_VH = vh;
+    }
+    function ensureAccessibleFontLink(){
+      if (document.getElementById("kr-atkinson-link")) return;
+      var link=document.createElement("link");
+      link.id="kr-atkinson-link";
+      link.rel="stylesheet";
+      link.href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap";
+      document.head.appendChild(link);
+    }
+  
+    // ===== Elements =====
+    var leftImg  = document.getElementById("kr-img-left");
+    var rightImg = document.getElementById("kr-img-right");
+    var leftPage = document.getElementById("kr-left");
+    var rightPage= document.getElementById("kr-right");
+    var btnPrev  = document.getElementById("kr-prev");
+    var btnNext  = document.getElementById("kr-next");
+    var progress = document.getElementById("kr-progress");
+    var counter  = document.getElementById("kr-counter");
+    var zoneL    = document.getElementById("kr-zone-left");
+    var zoneR    = document.getElementById("kr-zone-right");
+    var themeSel = document.getElementById("kr-theme");
+    var fullBtn  = document.getElementById("kr-full");
+    var zoomOut  = document.getElementById("kr-zoom-out");
+    var zoomIn   = document.getElementById("kr-zoom-in");
+    var viewBtn  = document.getElementById("kr-view");
+    var fontSel  = document.getElementById("kr-font");
+    var krRoot   = document.getElementById("kr-root");
+  
+    // ===== State =====
+    var images=[], total=0, index=0;
+  
+    // ===== PDF load/render =====
+    async function renderPageToDataURL(pdf, pageNumber, scale){
+      var page=await pdf.getPage(pageNumber);
+      var viewport=page.getViewport({scale:scale});
+      var canvas=document.createElement("canvas");
+      var ctx=canvas.getContext("2d");
+      canvas.width=viewport.width; canvas.height=viewport.height;
+      await page.render({canvasContext:ctx, viewport:viewport}).promise;
+      return {dataURL:canvas.toDataURL("image/jpeg",0.92), w:canvas.width, h:canvas.height};
+    }
+    async function loadPDF(){
+      await loadScript("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js");
+      await loadScript("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js");
+      if (window.pdfjsLib){ window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; }
+      var pdf=await window.pdfjsLib.getDocument({url:FILE_URL}).promise;
+      total=pdf.numPages; images=new Array(total);
+      for (var p=1;p<=total;p++){
+        counter.textContent="Loading "+p+"/"+total;
+        images[p-1]=await renderPageToDataURL(pdf,p,RENDER_SCALE);
+        progress.value=Math.round((p/total)*100);
+      }
+    }
+  
+    // ===== Render =====
+    function render(){
+      var leftIdx,rightIdx;
+      if (useSpread()){
+        if ((index+1)%2===1){ rightIdx=index; leftIdx=index-1; } else { leftIdx=index; rightIdx=index+1; }
+        leftPage.style.display=leftIdx>=0?"flex":"none";
+        rightPage.style.display=rightIdx<total?"flex":"none";
+        leftPage.classList.remove("single"); rightPage.classList.remove("single");
+      } else {
+        leftIdx=index; rightIdx=-1;
+        leftPage.style.display="flex"; rightPage.style.display="none"; leftPage.classList.add("single");
+      }
+      if (leftIdx>=0){
+        var L=images[leftIdx]; leftImg.style.opacity=0; leftImg.onload=function(){leftImg.style.opacity=1;};
+        leftImg.src=L.dataURL; leftImg.alt="Page "+(leftIdx+1);
+      }
+      if (rightIdx>=0&&rightIdx<total){
+        var R=images[rightIdx]; rightImg.style.opacity=0; rightImg.onload=function(){rightImg.style.opacity=1;};
+        rightImg.src=R.dataURL; rightImg.alt="Page "+(rightIdx+1);
+      }
+      var logical=Math.max(1,Math.min(total,index+1)), pct=Math.round((logical/total)*100);
+      progress.value=pct; counter.textContent=pct+"%";
+      btnPrev.disabled=(index<=0||(useSpread()&&index<=1));
+      btnNext.disabled=(index>=total-1);
+    }
+  
+    // ===== Navigation =====
+    function goPrev(){ if(useSpread()){ index = index<=1?0:index-2; } else { index=Math.max(0,index-1); } render(); }
+    function goNext(){ if(useSpread()){ index = index>=total-2?total-1:index+2; } else { index=Math.min(total-1,index+1); } render(); }
+  
+    // ===== Events =====
+    btnPrev.addEventListener("click",goPrev);
+    btnNext.addEventListener("click",goNext);
+    zoneL.addEventListener("click",goPrev);
+    zoneR.addEventListener("click",goNext);
+    document.addEventListener("keydown",function(e){ if(e.key==="ArrowLeft")goPrev(); if(e.key==="ArrowRight")goNext(); });
+  
+    themeSel.addEventListener("change",function(){ var t=this.value; if(!THEMES[t]) t=DEFAULT_THEME; setTheme(t); });
+  
+    fullBtn.addEventListener("click",function(){
+      var el=root.querySelector(".kr-root");
+      if(!document.fullscreenElement){(el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen)?.call(el);}
+      else {(document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen)?.call(document);}
+    });
+  
+    zoomOut.addEventListener("click", function(){ setViewportVH(VIEWPORT_VH - VH_STEP); });
+    zoomIn .addEventListener("click", function(){ setViewportVH(VIEWPORT_VH + VH_STEP); });
+  
+    viewBtn.addEventListener("click", function(){
+      viewMode = (viewMode === "single") ? "spread" : "single";
+      viewBtn.textContent = "Two-page: " + (viewMode === "spread" ? "On" : "Off");
+      render();
+    });
+  
+    fontSel.addEventListener("change", function(){
+      if (this.value === "accessible"){
+        ensureAccessibleFontLink();
+        krRoot.classList.add("kr-accessible");
+      } else {
+        krRoot.classList.remove("kr-accessible");
+      }
+    });
+  
+    window.addEventListener("resize", render);
+  
+    // ===== Start =====
+    (async function start(){
+      try{
+        if(!FILE_URL){console.error("Missing PDF URL"); return;}
+        setTheme(DEFAULT_THEME);                 // dark colors
+        await loadPDF();
+        setViewportVH(VIEWPORT_VH);             // big page by default
+        document.getElementById("kr-theme").value = DEFAULT_THEME;  // reflect dark in dropdown
+        document.getElementById("kr-view").textContent = "Two-page: Off";
+        index=0; render();
+      }catch(err){ console.error(err); }
+    })();
+  })();
+  </script>
+  
